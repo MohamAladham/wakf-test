@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -40,6 +41,27 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'password'          => 'hashed',
     ];
+
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::created( function ( User $item ) {
+            // get currencies
+            // loop and create an account
+            Currency::get()->each( function ( $currency ) use ( $item ) {
+                $item->accounts()->create( [ 'currency_id' => $currency->id, 'number' => '' ] )->save();
+            } );
+        } );
+    }
+
+
+    public function accounts(): HasMany
+    {
+        return $this->hasMany( Account::class );
+    }
+
 }
